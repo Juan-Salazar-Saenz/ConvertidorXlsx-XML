@@ -1,11 +1,14 @@
+from dataclasses import dataclass
+from platform import architecture
 from tkinter import *                #Codigo para interfaces en python
 from tkinter import filedialog       #Codigo para importar desde windows en ventana
 import tkinter
 import openpyxl                      #Codigo para leer archivos excel
+from io import open                  #Codigo para escribir archivo en txt
 
 #configuracion de la venta
 root = Tk()
-root.geometry("450x300")
+root.geometry("650x300")
 root.title("Convertidor de .xlsx a XML BBVA Colombia - Loans")
 root.resizable(0,0)
 root.iconbitmap("bbva.ico")
@@ -20,6 +23,7 @@ tkinter.Label(root, text="Convertir de .xlsx a XML", bg="blue").pack(anchor=CENT
 ubicacion = StringVar()
 registros = StringVar()
 nombreHoja = StringVar()
+salida = StringVar()
 
 def abreFichero():
     #Buscamos la ruta del archivo
@@ -55,17 +59,55 @@ def convertir():
         archivoExcel = openpyxl.load_workbook(ubicacionExcel, data_only=True)
         #Seleecionamos la hoja
         try:
-            hojadeExcel = archivoExcel[nombreHoja.get()] 
-            registros.set(len(hojadeExcel['A'])-1)
+            hojadeExcel = archivoExcel[nombreHoja.get()]  #Seleccionamos la hoja de excel
+            registros.set(len(hojadeExcel['A'])-1)        #Contamos el numero de lineas
+            archivoXML = escribirXML()                    #Creamos el archivo de texto .XML
+            
+            for fila in hojadeExcel:
+                datos = [celda.value for celda in fila]
+                print(datos)
+                textoXML = "" 
+                for i in range(len(datos)):   
+                    if datos[i] == None:
+                        textoXML += "Vacio;"       
+                    else:
+                        textoXML += str(datos[i]) + ";"                    
+                
+                archivoXML.write(textoXML + " \n")        #Escribimos archivo            
+            
+            archivoExcel.close                            #Cerramos el archivo
         except:
             registros.set("Hoja inexistente,¡ intente de nuevo !")        
     except:
         registros.set("Seleccione Excel,¡ intente de nuevo !")        
-    
-        #for fila in hojadeExcel:
-        #    print([celda.value for celda in fila])
-        
+                
+def escribirXML():
 
-tkinter.Button (root, text="Convertir", command=convertir).place(x = 100, y = 130) 
+    #Se paramos el archivo en carpetas
+    ruta = ubicacion.get().split(sep="/")
+    #Recorremos el archivo para cambiar el / por //
+    ubicacionXml = ""
+    ubicacionXml1 = ""
+    
+    for i in range(len(ruta)-1):    
+        ubicacionXml += ruta[i] + "//"
+        ubicacionXml1 += ruta[i] + "/"
+    #reconstruimos la ruta
+    nombretxt = ruta[len(ruta)-1].split(sep=".")
+    ubicacionXml += nombretxt[0] + ".XML"
+    ubicacionXml1 += nombretxt[0] + ".XML"
+    
+    try:
+        salida.set(ubicacionXml1)
+        archivoTexto = open(ubicacionXml,"w")
+        return archivoTexto
+    except:
+        salida.set("Archivo existente,¡ intente de nuevo !")
+
+tkinter.Button (root, text=" * Convertir * ", command=convertir).place(x = 100, y = 130) 
+
+tkinter.Label(root, text="Ubicacion de salida").place(x = 10, y = 160) 
+
+tkinter.Label(root, state=DISABLED, textvariable=salida).place(x = 130, y = 160) 
 
 root.mainloop()
