@@ -1,3 +1,4 @@
+from cmath import e
 from dataclasses import dataclass
 from platform import architecture
 from tkinter import *                #Codigo para interfaces en python
@@ -6,11 +7,10 @@ import tkinter
 import openpyxl                      #Codigo para leer archivos excel
 from io import open                  #Codigo para escribir archivo en txt
 import xml.etree.ElementTree as cxml #Codigo para escribir archivo en XML
-
     
 #configuracion de la venta
 root = Tk()
-root.geometry("650x300")
+root.geometry("850x300")
 root.title("Convertidor de .xlsx a XML BBVA Colombia - Loans")
 root.resizable(0,0)
 root.iconbitmap("bbva.ico")
@@ -62,28 +62,32 @@ def convertir():
         archivoExcel = openpyxl.load_workbook(ubicacionExcel, data_only=True)
         #Seleecionamos la hoja
         try:
-            hojadeExcel = archivoExcel[nombreHoja.get()]  #Seleccionamos la hoja de excel
-            registros.set(len(hojadeExcel['A'])-1)        #Contamos el numero de lineas
-            archivoXML = escribirXML()                    #Creamos el archivo de texto .XML
-            archivoXML.write('<?xml version="1.0" encoding="UTF-8"?> \n')
-            for fila in hojadeExcel:
-                datos = [celda.value for celda in fila]                
-                textoXML = "" 
-                for i in range(len(datos)):   
-                    if datos[i] == None:
-                        textoXML += "Vacio;"       
-                    else:
-                        textoXML += str(datos[i]) + ";"                    
-                
-                #archivoXML.write(textoXML + " \n")        #Escribimos archivo            
-
-            textoXML = construccionXML()  
-            archivoXML.write(textoXML)
-            archivoExcel.close                            #Cerramos el archivo
-        except:
+            hojadeExcel = archivoExcel[nombreHoja.get()]                    #Seleccionamos la hoja de excel
+            registros.set(len(hojadeExcel['A'])-1)                          #Contamos el numero de lineas
+            archivoXML = escribirXML()                                      #Creamos el archivo de texto .XML
+            archivoXML.write('<?xml version="1.0" encoding="UTF-8"?> \n')   #Escribirmos la primera linea de archivo XML
+            textoXML = construccionXML(hojadeExcel)                         #Enviamos datos a escribir
+            archivoXML.write(str(textoXML))                                 #Escribirmos XML
+            archivoExcel.close                                              #Cerramos el archivo
+        except e:
+            print(e)
             registros.set("Hoja inexistente,¡ intente de nuevo !")        
-    except:
-        registros.set("Seleccione Excel,¡ intente de nuevo !")        
+    except e:
+        print(e)
+        registros.set("Seleccione Excel,¡ intente de nuevo !")      
+
+#Escrbiir todo el excel separado por comas
+#           for fila in hojadeExcel:
+#                datos = [celda.value for celda in fila]                
+#                textoXML = "" 
+#                for i in range(len(datos)):   
+#                    if datos[i] == None:
+#                        textoXML += "Vacio;"       
+#                    else:
+#                        textoXML += str(datos[i]) + ";"                    
+#                
+#                #archivoXML.write(textoXML + " \n")        #Escribimos archivo            
+  
                 
 def escribirXML():
 
@@ -101,78 +105,86 @@ def escribirXML():
     ubicacionXml += nombretxt[0] + ".XML"
     ubicacionXml1 += nombretxt[0] + ".XML"
     
-    try:
+    try:        
         salida.set(ubicacionXml1)
         archivoTexto = open(ubicacionXml,"w")
         return archivoTexto
     except:
         salida.set("Archivo existente,¡ intente de nuevo !")
 
-def construccionXML():
+def construccionXML(hojadeExcel):
+    
     xml = cxml.Element('garantias')
 
     op = cxml.SubElement(xml, "op")
 
-    cxml.SubElement(op, "t").text="I"
-    cxml.SubElement(op, "tg").text="1"
-    cxml.SubElement(op, "hash").text="3925"
-
-    glc = cxml.SubElement(xml, "glc")
-    ddor = cxml.SubElement(glc, "ddor")
+    cxml.SubElement(op, "t").text=str("I")
+    cxml.SubElement(op, "tg").text=str(registros.get())
+    cxml.SubElement(op, "hash").text=str("3925")
     
-    cxml.SubElement(ddor, "cci").text="1"
-    cxml.SubElement(ddor, "ni").text="5022743"
-    cxml.SubElement(ddor, "pn").text="ABELARDO"
-    cxml.SubElement(ddor, "pa").text="BARRETO"
-    cxml.SubElement(ddor, "sa").text="GUILLEN"
-    cxml.SubElement(ddor, "pais").text="CO"
-    cxml.SubElement(ddor, "dpto").text="8"    
-    cxml.SubElement(ddor, "mun").text="08001"
-    cxml.SubElement(ddor, "dir").text="CR 9 A 17 19"
-    cxml.SubElement(ddor, "email").text="abelardobarretoguillen@hotmail.com"
-    cxml.SubElement(ddor, "tel").text="3719150"
-    cxml.SubElement(ddor, "cel").text="3114097178"
-    cxml.SubElement(ddor, "tdc").text="0"
-    cxml.SubElement(ddor, "ins").text="false"
-    cxml.SubElement(ddor, "gen").text="1"
-    cxml.SubElement(ddor, "tddor").text="d"
+    glc = cxml.SubElement(xml, "glc")
+    i=0                                     #Eliminamos el encabezado de la hoja
+    for fila in hojadeExcel:
+        if (i>0):            
+            datos = [celda.value for celda in fila]  
+                    
+            ddor = cxml.SubElement(glc, "ddor")
 
-    acdor = cxml.SubElement(glc, "acdor")
+            cxml.SubElement(ddor, "cci").text=str("1")
+            cxml.SubElement(ddor, "ni").text=str(datos[1])
+            nombre = str(datos[2]) + str(datos[3])
+            cxml.SubElement(ddor, "pn").text=str(nombre)
+            cxml.SubElement(ddor, "pa").text=str(datos[4])
+            cxml.SubElement(ddor, "sa").text=str(datos[5])
+            cxml.SubElement(ddor, "pais").text=str(datos[6])
+            cxml.SubElement(ddor, "dpto").text=str(datos[7])
+            cxml.SubElement(ddor, "mun").text=str(datos[8])
+            cxml.SubElement(ddor, "dir").text=str(datos[9])
+            cxml.SubElement(ddor, "email").text=str(datos[10])
+            cxml.SubElement(ddor, "tel").text=str(datos[11])
+            cxml.SubElement(ddor, "cel").text=str(datos[12])
+            cxml.SubElement(ddor, "tdc").text=str("0")
+            cxml.SubElement(ddor, "ins").text=str("false")
+            cxml.SubElement(ddor, "gen").text=str("1")
+            cxml.SubElement(ddor, "tddor").text=str(datos[13])
+        
+            acdor = cxml.SubElement(glc, "acdor")
 
-    cxml.SubElement(acdor, "cci").text="6"
-    cxml.SubElement(acdor, "ni").text="860003020"
-    cxml.SubElement(acdor, "dv").text="1"
-    cxml.SubElement(acdor, "rs").text="BANCO BILBAO VIZCAYA ARGENTARIA COLOMBIA S.A.BBVA COLOMBIA"
-    cxml.SubElement(acdor, "pais").text="CO"
-    cxml.SubElement(acdor, "dpto").text="11"
-    cxml.SubElement(acdor, "mun").text="11001"
-    cxml.SubElement(acdor, "dir").text="KR 9 72-21 PI '7'"
-    cxml.SubElement(acdor, "email").text="Garantiasmobiliarias@confecamaras.org.co"
-    cxml.SubElement(acdor, "tel").text="3471600"
-    cxml.SubElement(acdor, "cel").text="0313471600"
-    cxml.SubElement(acdor, "ppal").text="true"
-    cxml.SubElement(acdor, "ppar").text="100"
+            cxml.SubElement(acdor, "cci").text="2"
+            cxml.SubElement(acdor, "ni").text=str(datos[14])
+            cxml.SubElement(acdor, "dv").text=str(datos[15])
+            cxml.SubElement(acdor, "rs").text=str(datos[16])
+            cxml.SubElement(acdor, "pais").text=str(datos[17])
+            cxml.SubElement(acdor, "dpto").text=str(datos[18])
+            cxml.SubElement(acdor, "mun").text=str(datos[19])
+            cxml.SubElement(acdor, "dir").text=str(datos[20])
+            cxml.SubElement(acdor, "email").text=str(datos[21])
+            cxml.SubElement(acdor, "tel").text=str(datos[22])
+            cxml.SubElement(acdor, "cel").text=str(datos[23])
+            cxml.SubElement(acdor, "ppal").text=str("true")
+            cxml.SubElement(acdor, "ppar").text=str("100")
 
-    descbien = cxml.SubElement(glc, "descbien").text="Vehiculo"
-    prad = cxml.SubElement(glc, "prad").text="true"
-    bienes = cxml.SubElement(glc, "bienes")
+            descbien = cxml.SubElement(glc, "descbien").text=str(datos[24])
+            prad = cxml.SubElement(glc, "prad").text=str("true")
+            bienes = cxml.SubElement(glc, "bienes")
 
-    cxml.SubElement(bienes, "ctb").text="1"
-    cxml.SubElement(bienes, "marca").text="KIA"
-    cxml.SubElement(bienes, "srial").text="KNABE511AHT359063"
-    cxml.SubElement(bienes, "mdlo").text="2017"
-    cxml.SubElement(bienes, "placa").text="WGD259"
-    cxml.SubElement(bienes, "desc").text="Vehiculo"
-    cxml.SubElement(bienes, "fabric").text="GM Colmotores"
+            cxml.SubElement(bienes, "ctb").text=str("1")
+            cxml.SubElement(bienes, "marca").text=str(datos[26])
+            cxml.SubElement(bienes, "srial").text=str(datos[27])
+            cxml.SubElement(bienes, "mdlo").text=str(datos[28])
+            cxml.SubElement(bienes, "placa").text=str(datos[29])
+            cxml.SubElement(bienes, "desc").text=str(datos[30])
+            cxml.SubElement(bienes, "fabric").text=str(datos[31])
 
-    monto = cxml.SubElement(glc, "monto").text="46350000"
-    vdef = cxml.SubElement(glc, "vdef").text="1"
-    ffin = cxml.SubElement(glc, "ffin").text="2032-12-30T23:59:59.0000000"
-    ctg = cxml.SubElement(glc, "ctg").text="1"
-    cm = cxml.SubElement(glc, "cm").text="COP"
-
+            monto = cxml.SubElement(glc, "monto").text=str(datos[32])
+            vdef = cxml.SubElement(glc, "vdef").text=str(datos[33])
+            ffin = cxml.SubElement(glc, "ffin").text=str(datos[34])
+            ctg = cxml.SubElement(glc, "ctg").text="1"
+            cm = cxml.SubElement(glc, "cm").text=str(datos[35])
+        i += 1
+    
     cxml.indent(xml)                                  #identamos el XML creado
-    return cxml.tostring(xml, encoding='unicode')     #Imprimimos el XML
+    return str(cxml.tostring(xml, encoding='unicode'))     #Imprimimos el XML
 
 tkinter.Button (root, text=" * Convertir * ", command=convertir).place(x = 100, y = 130) 
 
