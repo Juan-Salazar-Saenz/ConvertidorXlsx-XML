@@ -122,13 +122,13 @@ def construccionXML(hojadeExcel):
     cxml.SubElement(op, "tg").text=str(registros.get())
     cxml.SubElement(op, "hash").text=str("3925")
     
-    glc = cxml.SubElement(xml, "glc")
     i=0                                     #Eliminamos el encabezado de la hoja
     for fila in hojadeExcel:
-        if (i>0):            
+        if (i>0):   
+            gcl = cxml.SubElement(xml, "gcl")         
             datos = [celda.value for celda in fila]  
                     
-            ddor = cxml.SubElement(glc, "ddor")
+            ddor = cxml.SubElement(gcl, "ddor")
 
             cxml.SubElement(ddor, "cci").text=str("1")
             cxml.SubElement(ddor, "ni").text=str(datos[1])
@@ -148,7 +148,7 @@ def construccionXML(hojadeExcel):
             cxml.SubElement(ddor, "gen").text=str("1")
             cxml.SubElement(ddor, "tddor").text=str(datos[13])
         
-            acdor = cxml.SubElement(glc, "acdor")
+            acdor = cxml.SubElement(gcl, "acdor")
 
             cxml.SubElement(acdor, "cci").text="2"
             cxml.SubElement(acdor, "ni").text=str(datos[14])
@@ -164,9 +164,9 @@ def construccionXML(hojadeExcel):
             cxml.SubElement(acdor, "ppal").text=str("true")
             cxml.SubElement(acdor, "ppar").text=str("100")
 
-            descbien = cxml.SubElement(glc, "descbien").text=str(datos[24])
-            prad = cxml.SubElement(glc, "prad").text=str("true")
-            bienes = cxml.SubElement(glc, "bienes")
+            descbien = cxml.SubElement(gcl, "descbien").text=str(datos[24])
+            prad = cxml.SubElement(gcl, "prad").text=str("true")
+            bienes = cxml.SubElement(gcl, "bienes")
 
             cxml.SubElement(bienes, "ctb").text=str("1")
             cxml.SubElement(bienes, "marca").text=str(datos[26])
@@ -176,11 +176,11 @@ def construccionXML(hojadeExcel):
             cxml.SubElement(bienes, "desc").text=str(datos[30])
             cxml.SubElement(bienes, "fabric").text=str(datos[31])
 
-            monto = cxml.SubElement(glc, "monto").text=str(datos[32])
-            vdef = cxml.SubElement(glc, "vdef").text=str(datos[33])
-            ffin = cxml.SubElement(glc, "ffin").text=str(datos[34])
-            ctg = cxml.SubElement(glc, "ctg").text="1"
-            cm = cxml.SubElement(glc, "cm").text=str(datos[35])
+            monto = cxml.SubElement(gcl, "monto").text=str(datos[32])
+            vdef = cxml.SubElement(gcl, "vdef").text=str(datos[33])
+            ffin = cxml.SubElement(gcl, "ffin").text=str(datos[34])
+            ctg = cxml.SubElement(gcl, "ctg").text="1"
+            cm = cxml.SubElement(gcl, "cm").text=str(datos[35])
         i += 1
     
     cxml.indent(xml)                                  #identamos el XML creado
